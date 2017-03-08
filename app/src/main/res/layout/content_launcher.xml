@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_launcher"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="de.vierling.andreas.onedownv2.Launcher"
+    tools:showIn="@layout/activity_launcher">
+
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/heartrateinfo"
+        android:id="@+id/textheartrate"
+        android:layout_marginTop="28dp"
+        android:layout_below="@+id/start"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/Heartrate"
+        android:text="30"
+        android:layout_below="@+id/textheartrate"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp" />
+
+
+    <TextView
+        android:text="@string/heartbeatinfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="13dp"
+        android:id="@+id/countdownnrtxt"
+        android:layout_below="@+id/Heartrate"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/countdownnr"
+        android:text="2000000"
+        android:layout_below="@+id/countdownnrtxt"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp" />
+
+    <Button
+        android:text="stop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/stop"
+        android:layout_alignParentTop="true"
+        android:layout_toEndOf="@+id/textheartrate"
+        android:layout_marginStart="16dp" />
+
+    <Button
+        android:text="-"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/rateminus"
+        android:layout_below="@+id/rateplus"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="14dp" />
+
+    <Button
+        android:text="einstellungen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:id="@+id/settings" />
+
+
+    <Button
+        android:text="start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/start"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:text="+"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/rateplus"
+        android:layout_centerVertical="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:text="verbinden"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/connect"
+        android:layout_marginTop="27dp"
+        android:layout_alignTop="@+id/rateplus"
+        android:layout_alignEnd="@+id/stop" />
+
+
+</RelativeLayout>

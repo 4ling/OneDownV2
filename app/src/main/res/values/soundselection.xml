@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="sounds">
+        <item>Standard Kickdrum</item>
+        <item>Gunnars Sound 1</item>
+        <item>Lisas Sound 1</item>
+        <item>Gunnars Sound 2</item>
+        <item>Lisas Sound 2</item>
+        <item>Gunnars Sound 3</item>
+        <item>Lisas Sound 3</item>
+    </string-array>
+
+
+
+</resources>
