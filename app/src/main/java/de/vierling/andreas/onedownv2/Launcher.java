@@ -9,6 +9,7 @@ import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -28,6 +29,7 @@ import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
 import com.google.android.gms.cast.framework.SessionManagerListener;
 
+import java.io.File;
 import java.io.IOException;
 
 import de.fau.sensorlib.DsBleSensor;
@@ -59,6 +61,12 @@ public class Launcher extends AppCompatActivity {
     private CastSession NewCastSession;
     private CastChannel NewCastChannel;
     private String Transfertext;
+
+
+    //Logmich
+    public String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/onedownlog";
+    Loggingactivity loggingactivity;
+    int logcount = 0;
 
 
 
@@ -145,6 +153,10 @@ public class Launcher extends AppCompatActivity {
             }
         }
     };
+
+
+
+    //
     //private Ringbuffer ringbuffer = new Ringbuffer(25,0.3);
     private numberutil inttostirng = new numberutil();
     private TextView countdownnr;
@@ -330,6 +342,7 @@ public class Launcher extends AppCompatActivity {
         setContentView(R.layout.activity_launcher);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        //load all soundfiles
         myKicksound = new SoundPool(1, AudioManager.STREAM_MUSIC,0);
         kicksoundID = myKicksound.load(this,R.raw.kick,1);
         gunnarsoundID1 = myKicksound.load(this,R.raw.heartbeatgunnar,1);
@@ -339,8 +352,16 @@ public class Launcher extends AppCompatActivity {
         gunnarsoundID3 = myKicksound.load(this,R.raw.heartbeatgunnar2,1);
         lisasoundID3 = myKicksound.load(this,R.raw.heartbeatlisa2,1);
 
+        //create directory for log
+        //Logmich
+        File dir = new File(path);
+        dir.mkdir();
+        Log.d(TAG,"" + dir.mkdir());
 
-        Values.setStarttext("Person A");
+        loggingactivity = new Loggingactivity(dir,path);
+
+
+
 
         // For Android 6+ we have to make sure that we have the BLE permissions
         try {
@@ -350,14 +371,14 @@ public class Launcher extends AppCompatActivity {
         }
 
 
-
+        //Initialize Values
         Heartrate = (TextView) findViewById(R.id.Heartrate);
         Heartrate.setTextSize(25);
         Heartrate.setText("" + Values.getRate());
         countdownnr = (TextView) findViewById(R.id.countdownnr);
         countdownnr.setTextSize(25);
         countdownnr.setText("" + ((long) Values.getStartvalue() + Values.getLargenumber()));
-
+        Values.setStarttext("Person A");
         setshareableInfo();
 
 
@@ -411,6 +432,7 @@ public class Launcher extends AppCompatActivity {
     @Override
     protected void onPause(){
         setshareableInfo();
+        Toaster.makeText(getApplicationContext(), "App pausiert.", Toast.LENGTH_SHORT).show();
         super.onPause();
         NewContext.getSessionManager().removeSessionManagerListener(NewCastSessionManagerListener,CastSession.class);
     }
@@ -506,10 +528,11 @@ public class Launcher extends AppCompatActivity {
     private void sendCountdownstate(String Countdownstate){
         if (NewCastChannel != null) {
             NewCastSession.sendMessage(NewCastChannel.getCastname(),Countdownstate);
-        } else {
-            if(Toaster != null){
-                Toaster.cancel();
-            }
+        }
+        else {
+           // if(Toaster != null){
+             //   Toaster.cancel();
+            //}
 
             Values.setCastok(false);
         }
@@ -546,13 +569,17 @@ public class Launcher extends AppCompatActivity {
 
  public class mycountDownTimer extends CountDownTimer {
         /**
-         * @param millisInFuture    The number of millis in the future from the call
-         *                          to {@link #start()} until the countdown is done and {@link #onFinish()}
-         *                          is called.
-         * @param countDownInterval The interval along the way to receive
-         *                          {@link #onTick(long)} callbacks.
          */
+        public void errortoast(){
+            if(Toaster == null) {
+                Toaster.makeText(getApplicationContext(), "Keine Verbindung zu Cast", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            Log.d(TAG,"Toasterdebug cancel called");
+            Toaster.cancel();
+        }
 
+        }
 
 
         public mycountDownTimer(long millisInFuture, long countDownInterval) {
@@ -567,6 +594,13 @@ public class Launcher extends AppCompatActivity {
             Values.setUpcount(Values.getUpcount()+((double) Values.getRate() / 600));
             setTransfertext(inttostirng.pointify((long)Values.getUpcount()) + " <HR NOSHADE SIZE=1>" +  inttostirng.pointify((long) (Values.getStartvalue() + Values.getLargenumber())));
             sendCountdownstate(Transfertext);
+            if(logcount%20 == 0) { //20 deswegen damit nur alle 2 s geloggt wird das sollte reichen
+                //loggingactivity.save("" + Values.getRate());
+                //TODO hallo stefan  hier löst es in meiner load funktion klasse loggingactivity immer den nullpointer aus seltsamer weise erstellt es mir auch nicht das verzeichniss
+                //obwohl ich das in der oncreate aufrufe unter //Logmich finest du alle dazu angelegten elemente
+
+            }
+            logcount++;
             if(mSensor != null){
                 Values.setBluetoothok(mSensor.isConnected());
             }else{
@@ -625,12 +659,7 @@ public class Launcher extends AppCompatActivity {
 
             }else{
                 if(!Values.getCastok() ){
-                    if(Toaster == null) {
-                        Toaster.makeText(getApplicationContext(), "Keine Verbindung zu Cast", Toast.LENGTH_SHORT).show();
-                    }
-                    else {
-                        Toaster.cancel();
-                    }
+                   errortoast();
                 }
                 mRelativelayout.setBackgroundColor(Color.RED);
             }
@@ -671,6 +700,7 @@ public class Launcher extends AppCompatActivity {
             countDownTimer.cancel();
             countDownTimer = null;
         }
+
 
 
     }
