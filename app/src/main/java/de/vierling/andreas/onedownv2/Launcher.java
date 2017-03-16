@@ -1,16 +1,21 @@
 package de.vierling.andreas.onedownv2;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.SoundPool;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -30,7 +35,12 @@ import com.google.android.gms.cast.framework.CastSession;
 import com.google.android.gms.cast.framework.SessionManagerListener;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 
 import de.fau.sensorlib.DsBleSensor;
 import de.fau.sensorlib.DsSensor;
@@ -52,6 +62,8 @@ public class Launcher extends AppCompatActivity {
     int gunnarsoundID3;
     int lisasoundID3;
 
+    //UDPSend client;
+
     int spaceholder1;
 
 
@@ -64,8 +76,15 @@ public class Launcher extends AppCompatActivity {
 
 
     //Logmich
-    public String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/onedownlog";
-    Loggingactivity loggingactivity;
+    //
+    // public File path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath(), "onedownlog");
+
+    FileOutputStream stream;
+
+
+
+
+   // Loggingactivity loggingactivity;
     int logcount = 0;
 
 
@@ -144,7 +163,7 @@ public class Launcher extends AppCompatActivity {
             Log.d(TAG, "new data: " + sensorDataFrame);
             if (sensorDataFrame instanceof HeartRateDataFrame) {
                 HeartRateDataFrame hr = (HeartRateDataFrame)sensorDataFrame;
-                Log.d(TAG, "HR: " + hr.getHeartRate());
+                Log.d(TAG, "Heartratedebug onnewdata: " + hr.getHeartRate());
 
                 Values.setRate((int) hr.getHeartRate());
 
@@ -309,7 +328,7 @@ public class Launcher extends AppCompatActivity {
                                                 // ...connect to it...
                                                 mSensor.connect();
                                                 Log.d(TAG, "Sleeping for 5");
-                                                Thread.sleep(5000);
+                                                Thread.sleep(8000);
                                                 // ...and start streaming data.
                                                 // New data will now appear in the callback above.  DE:2E:82:E1:65:CD
                                                 mSensor.startStreaming();
@@ -354,11 +373,11 @@ public class Launcher extends AppCompatActivity {
 
         //create directory for log
         //Logmich
-        File dir = new File(path);
-        dir.mkdir();
-        Log.d(TAG,"" + dir.mkdir());
+        //File dir = new File(path);
+        //dir.mkdir();
+     //   Log.d(TAG,"" + dir.mkdir());
 
-        loggingactivity = new Loggingactivity(dir,path);
+        //loggingactivity = new Loggingactivity(dir,path);
 
 
 
@@ -369,6 +388,9 @@ public class Launcher extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        //UDPCLient
+
 
 
         //Initialize Values
@@ -402,6 +424,22 @@ public class Launcher extends AppCompatActivity {
 
         NewContext = CastContext.getSharedInstance(this);
         NewContext.registerLifecycleCallbacksBeforeIceCreamSandwich(this, savedInstanceState);
+
+        boolean hasPermission = (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+        if (!hasPermission) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    112);
+        }
+
+        try {
+            //stream = openFileOutput("onedown-log-" + System.currentTimeMillis() + ".csv", MODE_PRIVATE);
+            stream = new FileOutputStream(new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath(), "onedown-log-" + System.currentTimeMillis() + ".csv"));
+            //stream = new FileOutputStream(path);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -432,9 +470,19 @@ public class Launcher extends AppCompatActivity {
     @Override
     protected void onPause(){
         setshareableInfo();
-        Toaster.makeText(getApplicationContext(), "App pausiert.", Toast.LENGTH_SHORT).show();
+       // Toaster.makeText(getApplicationContext(), "App pausiert.", Toast.LENGTH_SHORT).show();
         super.onPause();
         NewContext.getSessionManager().removeSessionManagerListener(NewCastSessionManagerListener,CastSession.class);
+
+        if (this.isFinishing()) {
+            try {
+                stream.flush();
+                stream.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -543,6 +591,10 @@ public class Launcher extends AppCompatActivity {
         Transfertext = text;
     }
 
+    public String getTransfertext(){
+        return Transfertext;
+    }
+
     static class CastChannel implements MessageReceivedCallback {
 
         private final String Castname;
@@ -572,7 +624,7 @@ public class Launcher extends AppCompatActivity {
          */
         public void errortoast(){
             if(Toaster == null) {
-                Toaster.makeText(getApplicationContext(), "Keine Verbindung zu Cast", Toast.LENGTH_SHORT).show();
+               // Toaster.makeText(getApplicationContext(), "Keine Verbindung zu Cast", Toast.LENGTH_SHORT).show();
         }
         else {
             Log.d(TAG,"Toasterdebug cancel called");
@@ -593,12 +645,12 @@ public class Launcher extends AppCompatActivity {
             countdownnr.setText("" + (long) (Values.getStartvalue() + Values.getLargenumber()));
             Values.setUpcount(Values.getUpcount()+((double) Values.getRate() / 600));
             setTransfertext(inttostirng.pointify((long)Values.getUpcount()) + " <HR NOSHADE SIZE=1>" +  inttostirng.pointify((long) (Values.getStartvalue() + Values.getLargenumber())));
-            sendCountdownstate(Transfertext);
-            if(logcount%20 == 0) { //20 deswegen damit nur alle 2 s geloggt wird das sollte reichen
-                //loggingactivity.save("" + Values.getRate());
-                //TODO hallo stefan  hier löst es in meiner load funktion klasse loggingactivity immer den nullpointer aus seltsamer weise erstellt es mir auch nicht das verzeichniss
-                //obwohl ich das in der oncreate aufrufe unter //Logmich finest du alle dazu angelegten elemente
-
+            sendCountdownstate("HALLOWELT");
+            //sendCountdownstate(Transfertext);
+            logcount++;
+            if(logcount%7==0) {
+                UDPSend client = new UDPSend();
+                client.execute();
             }
             logcount++;
             if(mSensor != null){
@@ -609,6 +661,13 @@ public class Launcher extends AppCompatActivity {
 
 
             if((int)Values.getStartvalue() != spaceholder1) {
+                try {
+                    String ss = new String(System.currentTimeMillis() + "," + Values.getRate() + "," + Values.getBluetoothok() + "\n");
+                    byte[] bla = ss.getBytes();
+                    stream.write(bla);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 switch (Values.getSoundselected()) {
                     case 0:
 
@@ -704,5 +763,46 @@ public class Launcher extends AppCompatActivity {
 
 
     }
+    private class UDPSend extends AsyncTask<Void,Void,Void> {
+        DatagramSocket s;
+
+        public UDPSend(){
+            try {
+                s = new DatagramSocket();
+            }catch (Exception e){
+
+            }
+        }
+        @Override
+        protected Void doInBackground(Void... params) {
+
+
+           // Log.v("CALLED", "YES");
+            //Log.d(TAG,"UDPsend" + message[0]+" " + message[1]);
+            //String messageStr = "Hello ! This is your msg from server.";
+            int server_port = 6543; //port that I’m using
+
+            try {
+
+                InetAddress local = InetAddress.getByName("192.168.1.255");
+                int msg_length = getTransfertext().toString().length();
+                byte[] bytemessage = getTransfertext().getBytes();
+                DatagramPacket p = new DatagramPacket(bytemessage, msg_length, local, server_port);
+
+                s.send(p);
+                Log.d("UDP", "message send");
+            } catch (Exception e) {
+              //  Log.d("UDP", "error  " + e.toString());
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result){
+            super.onPostExecute(result);
+
+        }
+    }
+
 
 }
