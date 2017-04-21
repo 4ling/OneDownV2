@@ -7,6 +7,8 @@ import android.widget.Toast;
  * Created by Andi on 01.03.2017.
  */
 
+
+//this class serves as dataframe and stores the systems parameters
 public class ValuesUtil{
 
     private static final String TAG = ValuesUtil.class.getSimpleName();
@@ -31,7 +33,7 @@ public class ValuesUtil{
         upcount = newupcount;
     }
 
-
+// getter and setter methods
 
     public int getSoundselected(){
         return Soundselected;
@@ -68,7 +70,9 @@ public class ValuesUtil{
     }
     public void setRate(int input){
         if(input != 0) {
-            rate = input;
+            if(input > 39 && input < 211 ) {
+                rate = input;
+            }
         }else{
             Toaster.setText("Bitte Sensor neu positionieren");
             Toaster.setDuration(Toaster.LENGTH_LONG);

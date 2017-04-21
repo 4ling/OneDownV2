@@ -8,7 +8,7 @@ import java.text.DecimalFormat;
 
 public class numberutil {
 
-
+    //adds dots at every three numbers
     public String pointify(long number){
         DecimalFormat newformat = new DecimalFormat();
         String output = newformat.format(number);
