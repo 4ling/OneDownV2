@@ -702,7 +702,7 @@ public class Launcher extends AppCompatActivity {
 
         @Override
         public void onTick(long millisUntilFinished) {
-            // reduces startvalue by beats per 30ms calculated from the current rate ~30fps
+            // reduces startvalue by beats per 50ms calculated from the current rate ~20fps
             Values.setStartvalue((double) ((Values.getStartvalue() - ((double) Values.getRate() / 1200))));
             // refreshes display information
             Heartrate.setText("" + Values.getRate());
