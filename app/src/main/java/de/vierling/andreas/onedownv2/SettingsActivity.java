@@ -50,7 +50,7 @@ public class SettingsActivity extends AppCompatActivity implements AdapterView.O
                         /**
                          * setall collects all data entered by the user and inserts them in the Values dataframe and forward them to shared preferences
                          * retrieves data from textedits with retrieveCountdown() and retriveText();
-                         * saves them in shared preferences with setshareableInfo();
+                         * saves them in shared preferences with setshareableInfo() ;
                          * refreshes textviews;
                          *
                           */
