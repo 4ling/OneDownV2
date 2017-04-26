@@ -100,6 +100,12 @@ import de.fau.sensorlib.SensorInfo;
 import de.fau.sensorlib.dataframe.HeartRateDataFrame;
 import de.fau.sensorlib.dataframe.SensorDataFrame;
 
+
+/**
+ * This class is the apps main activity.
+ * It handles the countdown, connection with the sensor, manual controll and connection with the chromecast.
+ *
+ */
 public class Launcher extends AppCompatActivity {
 
 
@@ -135,9 +141,22 @@ public class Launcher extends AppCompatActivity {
     public static ValuesUtil Values = new ValuesUtil(80,2147000000,367499,0);
 
     // variables needed for streaming activity intitialized in oncreate
+    /** initialize cast variables
+     * initializes Castcontext with modified singleton from cast options provider
+     * Device discovery is completely managed by the CastContext.
+     * When initializing the CastContext, the sender app specifies the receiver application ID,
+     * and can optionally request namespace filtering by setting supportedNamespaces in CastOptions.
+     * CastContext holds a reference to the MediaRouter internally, and will start the discovery process
+     * when the sender app enters the foreground, and stop when the sender app enters background.
+     */
     private CastContext NewContext;
+    /**
+     * Castsession includes the connection to the device, the management of the reciever application and initializes a communication channel.
+     * They are mangaged by the SessionManager, which can be accessed by the CastContext (CastContext.getSharedInstance(this).getSessionManager())
+     */
     private CastSession NewCastSession;
-    private CastChannel NewCastChannel;
+    // see CasttextChannel class
+    private CasttextChannel NewCasttextChannel;
     // transfered sting with setter method
     private String Transfertext;
     public void setTransfertext(String text){
@@ -145,12 +164,17 @@ public class Launcher extends AppCompatActivity {
     }
 
 
+    /**
+     * SessionManagerListener is used to monitor session and apps status, creation suspension, resumption and termination of the session.
+     * Its callbacks can be used to track the session state and determine to when to enable or disable certain feartures like status of a mediaplayer on phone.
+     *  The session is the end to end connection between sender and reciever
+     *  @
+     */
 
-    // sessionmanager handles the behaviour of the session between cast device and phone
     private SessionManagerListener<CastSession> NewCastSessionManagerListener = new SessionManagerListener<CastSession>() {
         @Override
         public void onSessionStarting(CastSession castSession) {
-
+            //ignore
         }
 
         @Override
@@ -165,6 +189,8 @@ public class Launcher extends AppCompatActivity {
         @Override
         public void onSessionStartFailed(CastSession castSession, int i) {
             Log.d(TAG, "castdebug Session start failed");
+
+            //ignore
         }
 
 
@@ -172,8 +198,15 @@ public class Launcher extends AppCompatActivity {
         @Override
         public void onSessionEnding(CastSession castSession) {
             Log.d(TAG, "castdebug Session ended");
+
+            //ignore
         }
 
+        /**
+         * ends existing cast connection and resets castbutton
+         * @param castSession currently active cast session
+         * @param i error code integer
+         */
         @Override
         public void onSessionEnded(CastSession castSession, int i) {
             Log.d(TAG, "castdebug Session ended");
@@ -183,11 +216,18 @@ public class Launcher extends AppCompatActivity {
             invalidateOptionsMenu();
         }
 
+
+
         @Override
         public void onSessionResuming(CastSession castSession, String s) {
-
+            //ignore
         }
 
+        /**
+         * resumes existing castsession
+         * @param castSession still existing cast session
+         * @param b
+         */
         @Override
         public void onSessionResumed(CastSession castSession, boolean b) {
             Log.d(TAG, "castdebug Session resumed");
@@ -197,12 +237,12 @@ public class Launcher extends AppCompatActivity {
 
         @Override
         public void onSessionResumeFailed(CastSession castSession, int i) {
-
+            //ignore
         }
 
         @Override
         public void onSessionSuspended(CastSession castSession, int i) {
-
+        // ignore
         }
     };
 
@@ -211,8 +251,18 @@ public class Launcher extends AppCompatActivity {
     private Context getThis() {
         return this;
     }
+
+
     // Sensordatapracessor with costumized on new data method, sets valuse in Value dataframe
     private SensorDataProcessor mDataHandler = new SensorDataProcessor() {
+
+        /**
+         * extrcatcs the heartrate from sensordataframe
+         * sets heartrate Value equal the fresh extracted heartrate
+         * sets heartrate textview equat to heart rate
+         * @param sensorDataFrame dataframe contaiong data from sensor module
+         */
+
         @Override
         public void onNewData(SensorDataFrame sensorDataFrame) {
             Log.d(TAG, "new data: " + sensorDataFrame);
@@ -228,8 +278,10 @@ public class Launcher extends AppCompatActivity {
     };
 
 
+    /**
+     * custom numberformat used to modify output String
+      */
 
-    // custom numberformat used to modify output String
     private numberutil inttostirng = new numberutil();
 
     //Layout variables
@@ -250,7 +302,7 @@ public class Launcher extends AppCompatActivity {
     // for toast messages
     Toast Toaster;
 
-    // used for status request
+    // used for status request at sensor connection event. Informs user, if Bluetooth is not switched on.
     BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
 
@@ -282,9 +334,12 @@ public class Launcher extends AppCompatActivity {
                             Intent intent = new Intent(Launcher.this, SettingsActivity.class);
                             startActivity(intent);
                             break;
-                        // manally raises heartrate
+                        /**manally raises heartrate
+                         * On touch listener for rate minus and rate plus manually changes the heartrate +1 for every 0.2 s of a button down event
+                          */
+
                         case R.id.rateplus:
-                            //On touch listener for rate minus and rate plus manually changes the heartrate +/- 1 for every 0.2 s of a button down event
+
                             rateplus.setOnTouchListener(new View.OnTouchListener(){
                                 private Handler plusHandler;
                                 @Override public boolean onTouch(View plusv, MotionEvent plusevent){
@@ -316,9 +371,11 @@ public class Launcher extends AppCompatActivity {
                             break;
 
 
-                        // manually lowers heartrate
+                        /**manally raises heartrate
+                         * On touch listener for rate minus and rate plus manually changes the heartrate +/- 1 for every 0.2 s of a button down event
+                         */
                         case R.id.rateminus:
-                            //see rate plus
+
                             rateminus.setOnTouchListener(new View.OnTouchListener(){
                                 private Handler minusHandler;
                                 @Override public boolean onTouch(View minusv, MotionEvent minusevent){
@@ -348,7 +405,11 @@ public class Launcher extends AppCompatActivity {
 
                             });
                             break;
-                        // sets screen to custom start text
+                        /**
+                         * sets screen to custom start text
+                         * plays kicksound
+                          */
+
                         case R.id.send:
 
 
@@ -362,13 +423,20 @@ public class Launcher extends AppCompatActivity {
 
 
                             break;
+
+                        /**manally raises heartrate
+                         * starts connection event if bluetooth is activated otherwise an errror mesaage will occur
+                         * connection event pairs mobile and sensor if both are activated simultaniously
+                         *
+                         *
+                         */
                         case R.id.connect:
-                            //starts connection event if bluetooth is activated otherwise an errror mesaage will occur
+
                             if(bluetoothAdapter.isEnabled() != true){
                                 Toaster.makeText(getApplicationContext(), "Bitte Bluetooth aktivieren!", Toast.LENGTH_LONG).show();
                                 break;
                             }
-                            //connection event pairs mobile and sensor if both are activated simultaniously
+
                             try {
                                 //mSensor = new DsBleSensor(this, new SensorInfo("X Cell", "DE:2E:82:E1:65:CD"), mDataHandler);
                                 Toaster.makeText(getApplicationContext(), "Verbinde mit XCell", Toast.LENGTH_LONG).show();
@@ -456,7 +524,7 @@ public class Launcher extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        // asks for permisson to write log file in external storage.
         boolean hasPermission = (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
         if (!hasPermission) {
@@ -495,7 +563,8 @@ public class Launcher extends AppCompatActivity {
         send.setOnClickListener(trigger.get());
         mRelativelayout = (RelativeLayout)findViewById(R.id.content_launcher);
 
-        //initialize cast variables
+        // new Castcontext is loaded. Detects devices and initializes CastSession with selected device.
+        // works with the CastOptionsProvider and extracts app ID from there.
         NewContext = CastContext.getSharedInstance(this);
         NewContext.registerLifecycleCallbacksBeforeIceCreamSandwich(this, savedInstanceState);
 
@@ -504,42 +573,60 @@ public class Launcher extends AppCompatActivity {
 
     }
 
-    // adds castbutton to optopns menue
+    /**
+     * adds cast button to menu tab of the activity
+     * the castbuttonfactory sets up a MediaRouteButton. It wires the castbutton to the cast framework.
+     * The widget handles all connection and disconection requests of the user.
+     * If activated the SDK will set a MediaRouteSelector which is built by the CastContext based on the provided CastOptions
+     * @param menu menu of the apclication
+     * @return shows castbutton
+     *
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
+        super.onCreateOptionsMenu(menu);
+
         getMenuInflater().inflate(R.menu.menu_launcher, menu);
         CastButtonFactory.setUpMediaRouteButton(this, menu, R.id.Castbutton);
         return true;
     }
 
 
-
-
+    /**
+     * retreaves Values from shared preferences.
+     * refreshes textviews
+     * retrieves Sessionmanager listener from Castcontext and resumes the last Castsession if it had not been terminated.
+     */
     @Override
     protected void onResume(){
-        // reads new Value frame from shared preferences. the settings activity forwards its data this way
+
+        //
         getshareableInfo();
-        Log.d(TAG,"settingsdebug onresumecalled" + (int)Values.getStartvalue());
         super.onResume();
         // refreshes textview
         countdownnr.setText("" + ((long) Values.getStartvalue() + Values.getLargenumber()));
-        // resumes cast session or restarts it
+        // Register cast session listener
         NewContext.getSessionManager().addSessionManagerListener(NewCastSessionManagerListener,CastSession.class);
         if(NewCastSession == null){
+            // Get the current session if there is one
             NewCastSession = NewContext.getSessionManager().getCurrentCastSession();
         }
     }
 
+    /**
+     *  safes Value data in shared preferences
+     *  pauses cast session
+     *  &ends loging activity if app is finishing
+     */
     @Override
     protected void onPause(){
-        // safes Value data in shared preferences
+
         setshareableInfo();
 
         super.onPause();
-        // pauses cast session
+
         NewContext.getSessionManager().removeSessionManagerListener(NewCastSessionManagerListener,CastSession.class);
-        // ends loging activity if app is finishing
+
         if (this.isFinishing() && stream != null) {
             try {
                 stream.flush();
@@ -551,24 +638,29 @@ public class Launcher extends AppCompatActivity {
         }
     }
 
+    /**
+     * ends stream with sensor and disconnects it
+     * calls stop method which terminates countdowntimer and closes the log file
+     * cloases cast session
+     */
     @Override
     protected void onDestroy(){
-        // disconnects sensor
         if(mSensor != null) {
             mSensor.stopStreaming();
             mSensor.disconnect();
         }
-        // stops timer and log
         stop();
-        // closes cast session
         closeSession();
         super.onDestroy();
 
     }
 
 
+    /**
+     *    adds SharedPreferences called sharedValues.
+     *    saves Values in sharedValues in order to transfer them to settings activity
+     */
 
-    //saves Values in shared preferences in order to transfer them to settings activity
     public void setshareableInfo(){
         SharedPreferences sharedValues = getSharedPreferences("Values", Context.MODE_PRIVATE);
 
@@ -583,7 +675,10 @@ public class Launcher extends AppCompatActivity {
         editor.apply();
         Log.d(TAG,"shared preferences saved in Launcher");
     }
-    //reads new Value data from shared preferences
+    /**
+     *    retrieves sharedValues from SharedPreferences.
+     *    saves sharedValues in Values from Settingsactivityactivity.
+     */
     public void getshareableInfo(){
         SharedPreferences sharedValues = getSharedPreferences("Values", Context.MODE_PRIVATE);
         Values.setRate(sharedValues.getInt("heartrate", Values.getRate()));
@@ -595,81 +690,99 @@ public class Launcher extends AppCompatActivity {
         Log.d(TAG,"shared preferences called in Launcher");
     }
 
-
+    /**
+     * calls endStream which closes the CasttextChannel and sets CastSession to null
+     */
     private void closeSession(){
-        if(NewCastSession != null){
+        //if(NewCastSession != null){
         Log.d(TAG,"Castdebug closesession called");
         endStream();
         NewCastSession = null;
-        }
+        //}
     }
-    // initializes message channel with custom cast namespace returns error log if not successfull, user recivies feedback from cast ok boolean(see on tick)
-    private void startStream(){
-         Log.i(TAG, "startstream wurde aufgerufen");
 
-        if (NewCastSession != null && NewCastChannel == null) {
-            NewCastChannel = new CastChannel(getString(R.string.castname));
+    /**
+     * initializes message channel with custom cast namespace after callback from the chromecast returns error log if not successfull.
+     * initialie a new NewCasttextChannel with the namespace recieved by the callback.
+     * and afterwards initializes the a cast session with the NewCasttextChannel.
+     * @exception if this fails it sets the NewCasttextchannel on null again
+     * if succelsfully launched finally the Castok boolean is set to true
+     *
+      */
+
+    private void startStream(){
+         if (NewCastSession != null && NewCasttextChannel == null) {
+            NewCasttextChannel = new CasttextChannel(getString(R.string.castname));
             try {
-                NewCastSession.setMessageReceivedCallbacks(NewCastChannel.getCastname(),
-                        NewCastChannel);
+                NewCastSession.setMessageReceivedCallbacks(NewCasttextChannel.getCasttext(),
+                        NewCasttextChannel);
                 Log.d(TAG, "Message channel started");
             } catch (IOException e) {
                 Log.d(TAG, "Error starting message channel", e);
-                NewCastChannel = null;
+                NewCasttextChannel = null;
             }
         }
-
         Values.setCastok(true);
-
     }
 
 
+    /**
+     * removes CasttextCHannel from cast session and sets Casttextchannel null.
+      */
 
-    // ends cast session and cast channel
     private void endStream(){
         Log.d(TAG,"Castdebug endstream called");
-        if (NewCastSession!= null && NewCastChannel != null) {
+        if (NewCastSession != null && NewCasttextChannel != null) {
             try {
-                NewCastSession.removeMessageReceivedCallbacks(NewCastChannel.getCastname());
+                NewCastSession.removeMessageReceivedCallbacks(NewCasttextChannel.getCasttext());
                 Log.d(TAG, "Message channel closed");
             } catch (IOException e) {
                 Log.d(TAG, "Error closing message channel", e);
             } finally {
-                NewCastChannel = null;
+                NewCasttextChannel = null;
             }
         }
 
     }
-    // Sends string to cast reciever application
+
+    /**
+     * Sends string to cast reciever application through Casttextchannel on Castsession
+     * sets Castok false if transfer failed.
+      */
+
     private void sendCountdownstate(String Countdownstate){
-        if (NewCastChannel != null) {
-            NewCastSession.sendMessage(NewCastChannel.getCastname(),Countdownstate);
+        if (NewCasttextChannel != null) {
+            NewCastSession.sendMessage(NewCasttextChannel.getCasttext(),Countdownstate);
         }
         else {
-        //userfeedback if transfer failed; bgcolor changes in ontick if boolean == false
+
             Values.setCastok(false);
         }
-
     }
 
 
-    // cast channel custom class used for callback and logging meassage recieved event
-    static class CastChannel implements MessageReceivedCallback {
+    /**
+     * Custom message channel. Is initialized by CastSession and helps transfering Strings.
+     */
+    static class CasttextChannel implements MessageReceivedCallback {
 
-        private final String Castname;
+        private final String Casttext;
 
-
-        CastChannel(String newstate) {
-            Castname= newstate;
+        /**
+         * @param newtext the namespace used for sending messages
+         */
+        CasttextChannel(String newtext) {
+            Casttext= newtext;
         }
-
-
-        public String getCastname() {
-            return Castname;
+        /**
+         * @return the namespace used for sending messages
+         */
+        public String getCasttext() {
+            return Casttext;
         }
-
-
-
+        /*
+         * Receive message from the receiver application and loggs it.
+         */
         @Override
         public void onMessageReceived(CastDevice castDevice, String namespace, String message) {
             Log.d(TAG, "onMessageReceived: " + message);
@@ -677,16 +790,30 @@ public class Launcher extends AppCompatActivity {
 
     }
 
-//handles timerelated actions and refreshes all data in ontick uses 10 ticks per second
+    /**
+     * mycountDowntimer is used to refresh all data in custom on tick method.
+     *
+     *
+     */
  public class mycountDownTimer extends CountDownTimer {
 
 
-
-
+        /**
+         *
+         * @param millisInFuture
+         * number of ms the countdown lasts
+         * @param countDownInterval
+         * ontick interval in ms.
+         */
         public mycountDownTimer(long millisInFuture, long countDownInterval) {
             super(millisInFuture, countDownInterval);
         }
-        // byteme() method builds a string for a log event and converts it to a byte value
+
+        /**
+         * byteme() method builds a string for a log event and converts it to a byte value.
+         * @return bytevalue of a String containing the Unix timestamp, current heartrate and Sensorstate.
+          */
+
         public byte[] byteme(){
 
             StringBuilder Test = new StringBuilder();
@@ -700,6 +827,14 @@ public class Launcher extends AppCompatActivity {
             return Test.toString().getBytes();
         }
 
+        /**
+         * reduces startvalue by heartbeats per 50 ms
+         * refreshes textviews and sends countdwonstate to Chromecast.
+         * on full heartbeat event the selected soundfile is replayed an a log entry is written
+         * adjusts background color to either green if everything is working fine or red
+         * if there is a problem with the cast or the sensor.
+         * @param millisUntilFinished recieves param from mycountdowntimer constructor
+         */
         @Override
         public void onTick(long millisUntilFinished) {
             // reduces startvalue by beats per 50ms calculated from the current rate ~20fps
@@ -728,7 +863,7 @@ public class Launcher extends AppCompatActivity {
                     e.printStackTrace();
                 }
                 //Logs the duration of a whole heartbeat at a certain rate times the fraction of the heartbeat ofset. like event = 1s ofset is 20% of the beat event -> ofset time is 0.2 s
-                Log.d(TAG,"Delay time " + (1-(Values.getStartvalue()-(int)Values.getStartvalue()))* (60/(double)Values.getRate()) + " seconds delay at rate "  + Values.getRate() );
+                Log.d(TAG,"Delay time: " + (1-(Values.getStartvalue()-(int)Values.getStartvalue()))* (60/(double)Values.getRate()) + " seconds delay at rate "  + Values.getRate() + " bpm.");
                 // the selected sound is played
                 switch (Values.getSoundselected()) {
                     case 0:
@@ -836,12 +971,16 @@ public class Launcher extends AppCompatActivity {
         }
     }
 
-    //plus and minus rate are stetter metohds for the haert rate and refresh the display accordingly
+    /**
+     * Adds 1 to heartrate value and refreshes heartrate textview
+     */
     public void plusrate(){
         Values.setRate((Values.getRate() + 1));
         Heartrate.setText("" + Values.getRate());
     }
-
+    /**
+     * Subtracts +1 to heartrate value and refreshes heartrate textview
+     */
     public void minusrate(){
         if (Values.getRate() > 1) {
             Values.setRate((Values.getRate() - 1));
@@ -849,7 +988,12 @@ public class Launcher extends AppCompatActivity {
         }
     }
 
-    // start() method initialize log stream and starts a countdown with the duration of 8hs
+    /**
+     * initialzes a new log file FileOUTputStream
+     * Intitializes a nem custom CountdownTimer (mycountDownTimer) and starts it
+     * If the timer already has been initialized it returns right away
+      */
+
     private void start() {
         try {
 
@@ -867,7 +1011,10 @@ public class Launcher extends AppCompatActivity {
 
     }
 
-    // stop() finishes log file and stops countdown
+    /**
+     * closes existing logfile by closing the fileoutput stream initialized in the start method
+     * cancels the countdownTimer and sets sountdowntimer to null
+     */
     private void stop() {
         if(stream != null){
         try {

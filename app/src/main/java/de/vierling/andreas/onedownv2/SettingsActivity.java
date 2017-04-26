@@ -18,6 +18,9 @@ import android.widget.Toast;
 
 import com.google.android.gms.cast.framework.CastButtonFactory;
 
+/**
+ * SeetingsActivity offers the interfacte for the user to change the values of coundownstate, starttext, upcount and the soundpool id on the device.
+ */
 public class SettingsActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     private static final String TAG = SettingsActivity.class.getSimpleName();
@@ -44,17 +47,20 @@ public class SettingsActivity extends AppCompatActivity implements AdapterView.O
                 @Override
                 public void onClick(View click) {
                     switch (click.getId()) {
-                        // setall collects all data entered by the user and inserts them in the Values dataframe and forward them to shared preferences
+                        /**
+                         * setall collects all data entered by the user and inserts them in the Values dataframe and forward them to shared preferences
+                         * retrieves data from textedits with retrieveCountdown() and retriveText();
+                         * saves them in shared preferences with setshareableInfo();
+                         * refreshes textviews;
+                         *
+                          */
+
                         case R.id.setall:
 
-                            // retrieve data
                             retrieveCountdown();
                             retriveText();
 
-                            // save in shared preferances
                             setshareableInfo();
-
-                            //refreshes displa
                             startext.setText("Aktueller Starttext: \n" + Values.getStarttext());
                             if(Values.getStarttext().contains("NOSHADE")){
                                 startext.setText("Aktueller Starttext: \nDefault");
@@ -63,7 +69,10 @@ public class SettingsActivity extends AppCompatActivity implements AdapterView.O
 
                             Toaster.makeText(getApplicationContext(), "Neue Daten übernommen", Toast.LENGTH_LONG).show();
                             break;
-                        //sets upcount to 0 and start text to the default message
+                        /**
+                         *  sets upcount to 0 and start text to the default message with reset();
+                         */
+
                         case R.id.reset:
 
                             reset();
@@ -119,11 +128,14 @@ public class SettingsActivity extends AppCompatActivity implements AdapterView.O
 
     }
 
+    /**
+     * retieves Values from LAuncher activity
+     */
     @Override
     protected void onResume() {
         Log.d(TAG,"settingsbug onresume called");
         Log.d(TAG,"settingsbug oldinfo" + (int) Values.getStartvalue());
-        //retieves Values from LAuncher activity
+
         getshareableInfo();
         Log.d(TAG,"settingsbug newinfo" + (int) Values.getStartvalue());
         super.onResume();
@@ -132,20 +144,25 @@ public class SettingsActivity extends AppCompatActivity implements AdapterView.O
     @Override
     protected void onPause() {
         Log.d(TAG,"settingsbug onpause called");
-        //setshareableInfo();
         super.onPause();
     }
 
 
-    // adds castbutton
+    /**
+     * adds castbutton.
+     * Inflate the menu; this adds items to the action bar if it is present.
+      */
+
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_launcher, menu);
         CastButtonFactory.setUpMediaRouteButton(this, menu, R.id.Castbutton);
         return true;
     }
 
-    //sets upcount to 0 and starttext to the default message
+    /**
+     * sets upcount to 0 and starttext to the default message;
+     */
+
     public void reset(){
         Values.setStarttext("<DIV id=\"message\">used heartbeats <HR NOSHADE SIZE=1> <td style=\"vertical-align:top\"> remaining heartbeats</td></DIV>");
         startext.setText("Aktueller Starttext: \nDefault");
@@ -154,7 +171,12 @@ public class SettingsActivity extends AppCompatActivity implements AdapterView.O
         Values.setUpcount(0);
     }
 
-    // retrieves new countdownvakue from textedit and forwards it to Values dataframe
+
+    /**
+     * retrieves new countdownvakue from textedit and saves it in Values dataframe
+     * if no text is inserted the text is reset to default.
+     * @exception is thrown when text is forwarded instead of a number.
+     */
     public void retrieveCountdown() {
         String spaceholder = number.getText().toString();
         long output;
@@ -166,7 +188,11 @@ public class SettingsActivity extends AppCompatActivity implements AdapterView.O
             Log.d(TAG, "Settingsdebug retrievecountdown wrong numberformat");
         }
     }
-    //retrieves new starttext from textedit and forwards it to Values dataframe
+    /**
+     * retrieves new starttext from textedit and saves it in Values dataframe
+     * if no text is inserted the text is reset to default.
+     */
+
     public void retriveText(){
         String spaceholder = newText.getText().toString();
         Log.d(TAG,"Settingsdebug retrievetext param: " + spaceholder);
@@ -180,7 +206,10 @@ public class SettingsActivity extends AppCompatActivity implements AdapterView.O
         Log.d(TAG,"Settingsdebug retrievedtext string was empty");
         }
     }
-    //save Values in shared preferences
+    /**
+     *    adds SharedPreferences called sharedValues.
+     *    saves Values in sharedValues in order to transfer them to Launcher activity
+     */
     public void setshareableInfo(){
 
         Log.d(TAG,"shared preferences saved in settings");
@@ -196,7 +225,10 @@ public class SettingsActivity extends AppCompatActivity implements AdapterView.O
         editor.apply();
         Log.d(TAG,"shared preferences saved in settings");
     }
-    //retrieve values from shared preferences
+    /**
+     *    retrieves sharedValues from SharedPreferences.
+     *    saves sharedValues in Values from Launcheractivity.
+     */
     public void getshareableInfo(){
         Log.d(TAG,"shared preferences called in settings");
         SharedPreferences sharedValues = getSharedPreferences("Values", Context.MODE_PRIVATE);
@@ -210,7 +242,16 @@ public class SettingsActivity extends AppCompatActivity implements AdapterView.O
         Log.d(TAG,"shared preferences completed in settings");
     }
 
-
+    /**
+     *  shows soundselect array in spinner
+     *  sets Value of selected sound ID to selected spinner position
+     *  the spinnerposition is then forwarded to Launcher activity were the damanded sound is played
+     *  according to spinner position.
+     * @param parent parent clas
+     * @param view view of spinner
+     * @param position position of spinner
+     * @param id
+     */
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         String selected=parent.getItemAtPosition(position).toString();
@@ -219,6 +260,10 @@ public class SettingsActivity extends AppCompatActivity implements AdapterView.O
         Log.d(TAG,"Settingsdebug ontidemselected position selected " + soundselect.getSelectedItemPosition());
     }
 
+    /**
+     * sends a log when so item is selected in spinner
+     * @param parent parent class
+     */
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
         Log.d(TAG,"Settingsdebug ontidemselected no item selected ");

@@ -15,6 +15,7 @@
  *
  * original source https://github.com/googlecast/CastHelloText-android/blob/master/src/com/example/casthelloworld/MainActivity.java
  * This file has been modified by Andreas Vierling
+ *
  */
 package de.vierling.andreas.onedownv2;
 
@@ -29,6 +30,11 @@ import java.util.List;
 
 /**
  * Class used to initialize the CastContext singleton
+ * This class is also used to forward the assigned app ID of the cast application.
+ * This step is necessary since the apllication only runs on registered cast devices.
+ * OptionsProvider provides an instance of CastOptions which contains options that affect the behavior of the framework.
+ * The most important of these is the receiver application ID,
+ * which is used to filter discovery results and to launch the receiver app when a cast session is started.
  */
 public class CastOptionsProvider implements OptionsProvider {
 
