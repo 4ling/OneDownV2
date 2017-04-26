@@ -168,7 +168,7 @@ public class Launcher extends AppCompatActivity {
      * SessionManagerListener is used to monitor session and apps status, creation suspension, resumption and termination of the session.
      * Its callbacks can be used to track the session state and determine to when to enable or disable certain feartures like status of a mediaplayer on phone.
      *  The session is the end to end connection between sender and reciever
-     *  @
+     *  
      */
 
     private SessionManagerListener<CastSession> NewCastSessionManagerListener = new SessionManagerListener<CastSession>() {

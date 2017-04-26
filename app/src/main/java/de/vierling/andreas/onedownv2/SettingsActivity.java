@@ -175,7 +175,7 @@ public class SettingsActivity extends AppCompatActivity implements AdapterView.O
     /**
      * retrieves new countdownvakue from textedit and saves it in Values dataframe
      * if no text is inserted the text is reset to default.
-     * @exception is thrown when text is forwarded instead of a number.
+     * @exception NumberFormatException is thrown when text is forwarded instead of a number.
      */
     public void retrieveCountdown() {
         String spaceholder = number.getText().toString();
